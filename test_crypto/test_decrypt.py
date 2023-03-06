@@ -33,7 +33,13 @@ from hashlib import sha256
        (b'\x10\xa3\x17d\x9c%?\xc4+\x85',
         sha256(b'\x98\xf7\x85\xf9\xab\x06QK3/'),
         b'\xd7^\xf7\xc3=\x9f\xb1\x11T0',
-        b'\x98\xf7\x85\xf9\xab\x06QK3/')])
+        b'\x98\xf7\x85\xf9\xab\x06QK3/'),
+        
+        (b'\x10\xa3\x17d\x9c%?\xc4+\x85',
+        sha256(b''),
+        b'\xd7^\xf7\xc3=\x9f\xb1\x11T0',
+        b'\x98\xf7\x85\xf9\xab\x06QK3/'),
+        ])
 def test_decrypt_and_verify(recBytes, signature, key, expected_result):
     assert decrypt_and_verify(recBytes, signature, key) == expected_result
 
