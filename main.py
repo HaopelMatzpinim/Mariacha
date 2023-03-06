@@ -1,32 +1,29 @@
 from scapy.layers.inet import *
-from scapy.sendrecv import srloop, sendp, srp, sniff
-import socket
-
-
-def change_packet_header(packet):
-    return packet
-
-
-def encrypt_and_sign(data, key):
-    return data
+from scapy.all import Raw
+from scapy.sendrecv import sendp, sniff
+from intercept_packages.encryption_header import EncryptionHeader
+from crypto.generate_key import generate_key
+from crypto.encrypt import encrypt_and_sign
 
 
 def encrypt(packet):
-    return encrypt_and_sign(packet.build(), "key")
+    build_packet = packet.build()
+    return encrypt_and_sign(build_packet, generate_key(len(build_packet), 0))
 
 
 def send_packets_to_ip(dest_ip):
     def send_packets_to_interface(packet):
-        encrypted_packet = encrypt(packet)
-        including_header_packet = change_packet_header(encrypted_packet)
-        packet_ready_to_send = Ether() / IP(dst=dest_ip) / ICMP() / including_header_packet
+        signature, encrypted_packet = encrypt(packet)
+
+        if EncryptionHeader not in packet:
+            packet_ready_to_send = Ether(type=0xDED) \
+                / EncryptionHeader(signature=signature, index=13) \
+                / Raw(encrypted_packet)
+
         sendp(packet_ready_to_send)
+
     return send_packets_to_interface
 
 
 if __name__ == '__main__':
-    s = socket.socket(socket.AF_PACKET, socket.SOCK_RAW)
-    s.bind(('eth0', 0))
-
-    s.send()
-    # sniff(prn=send_packets_to_ip("172.16.28.21"))
+    sniff(prn=send_packets_to_ip("localhost"))
