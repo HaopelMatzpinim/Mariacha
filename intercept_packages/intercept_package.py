@@ -11,7 +11,8 @@ DEST_IP = '127.0.0.1'
 
 def encrypt(packet):
     build_packet = packet.build()
-    return encrypt_and_sign(build_packet, generate_key(len(build_packet), INDEX))
+    key = generate_key(len(build_packet), INDEX)
+    return encrypt_and_sign(build_packet, key)
 
 
 def decrypt(packet):
