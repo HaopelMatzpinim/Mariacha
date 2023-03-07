@@ -31,7 +31,6 @@ def plain_to_encrypted(packet):
         / EncryptionHeader(signature=signature, index=INDEX) \
         / Raw(encrypted_packet)
 
-    packet_ready_to_send.show()
     INDEX += 1
     sendp(packet_ready_to_send)
 
@@ -39,7 +38,7 @@ def plain_to_encrypted(packet):
 def encrypted_to_plain(packet):
     try:
         raw = decrypt(packet)
-        packet_ready_to_send = Ether(dst=DEST_MAC) / Raw(raw)
+        packet_ready_to_send = Ether() / Raw(raw)
         sendp(packet_ready_to_send)
     except Exception as e:
         print(e)
@@ -47,4 +46,4 @@ def encrypted_to_plain(packet):
 
 def sniff_all():
     sniff(prn=plain_to_encrypted)
-    # sniff(prn=encrypted_to_plain)
+    sniff(prn=encrypted_to_plain)
