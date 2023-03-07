@@ -7,8 +7,7 @@ from crypto.encrypt import encrypt_and_sign
 from crypto.decrypt import decrypt_and_verify
 
 INDEX = 0
-DEST_MAC = get_if_hwaddr(conf.iface)
-
+DEST_IP = '127.0.0.1'
 
 def encrypt(packet):
     build_packet = packet.build()
@@ -27,9 +26,12 @@ def plain_to_encrypted(packet):
 
     signature, encrypted_packet = encrypt(packet)
 
-    packet_ready_to_send = Ether(type=0xDED, dst=DEST_MAC) \
+    packet_ready_to_send = Ether() \
+        / IP(dst=DEST_IP) \
         / EncryptionHeader(signature=signature, index=INDEX) \
         / Raw(encrypted_packet)
+
+    packet_ready_to_send.show()
     INDEX += 1
     sendp(packet_ready_to_send)
 
@@ -45,4 +47,4 @@ def encrypted_to_plain(packet):
 
 def sniff_all():
     sniff(prn=plain_to_encrypted)
-    sniff(prn=encrypted_to_plain)
+    # sniff(prn=encrypted_to_plain)
