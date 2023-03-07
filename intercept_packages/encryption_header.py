@@ -7,6 +7,3 @@ class EncryptionHeader(Packet):
         StrFixedLenField('signature', None, SIGNATURE_SIZE),
         LongField('index', 0),
     ]
-
-def insert_ecryption_header(packet, signature, index):
-    return packet / EncryptionHeader(signature=signature, index=index)
