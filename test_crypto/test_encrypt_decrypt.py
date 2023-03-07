@@ -19,11 +19,24 @@ from crypto.encrypt import encrypt_and_sign
 
                           (b"",
                            b"123"),
+                          ])
+def test_encrypt_and_decrypt_error(message, key):
+    encrypted_message = encrypt_and_sign(message, key)
+    decrypted_message = decrypt_and_verify(encrypted_message[1], encrypted_message[0], key)
 
-                          (b"123",  # supposed to fail!
+    assert decrypted_message == message
+
+
+@pytest.mark.parametrize("message, key",
+                         [(b"hello world",
+                           b"123"),
+
+                          (b"123",
                            b"")
                           ])
 def test_encrypt_and_decrypt(message, key):
     encrypted_message = encrypt_and_sign(message, key)
-    decrypted_message = decrypt_and_verify(encrypted_message[1], encrypted_message[0], key)
-    assert decrypted_message == message
+    with pytest.raises(Exception):
+        decrypted_message = decrypt_and_verify(encrypted_message[1], encrypted_message[0], key)
+
+        assert decrypted_message != message
