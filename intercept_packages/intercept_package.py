@@ -16,7 +16,7 @@ def encrypt(packet):
 
 
 def decrypt(packet):
-    encryption_header = EncryptionHeader(raw(packet.getlayer(Raw)))
+    encryption_header = EncryptionHeader(packet.build()[len(Ether()) + len(IP()):])
     return decrypt_and_verify(encryption_header.getlayer(Raw).load,
                               encryption_header.signature,
                               generate_key(len(encryption_header.getlayer(Raw).load), encryption_header.index))
@@ -27,21 +27,19 @@ def plain_to_encrypted(packet):
 
     signature, encrypted_packet = encrypt(packet)
 
-    packet_ready_to_send = Ether() \
-        / IP(dst=DEST_IP) \
+    packet_ready_to_send = IP(dst=DEST_IP, proto=1) \
         / EncryptionHeader(signature=signature, index=INDEX) \
         / Raw(encrypted_packet)
 
-    packet_ready_to_send.show()
     INDEX += 1
-    sendp(packet_ready_to_send)
+    send(packet_ready_to_send)
 
 
 def encrypted_to_plain(packet):
     try:
         raw = decrypt(packet)
-        packet_ready_to_send = Ether(dst=DEST_MAC) / Raw(raw)
-        sendp(packet_ready_to_send)
+        packet_ready_to_send = Raw(raw)
+        send(packet_ready_to_send)
     except Exception as e:
         print(e)
 
