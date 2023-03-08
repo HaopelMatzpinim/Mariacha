@@ -6,17 +6,19 @@ from intercept_packages.encryption_header import *
 from crypto.generate_key import *
 from crypto.encrypt import *
 from crypto.decrypt import *
+import os
 
 INDEX = 0
-DEST_IP = '172.16.28.18'
-PLAIN_MAC = 'f4:39:09:10:b4:a8'
-ENCRYPTED_MAC = 'f4:39:09:10:b1:92'
+# DEST_IP = DEST_IP
+PLAIN_IP = os.environ.get('PLAIN_IP')
+ENCRYPTED_IP = os.environ.get('ENCRYPTED_IP')
+
 
 
 def encrypt(packet):
     build_packet = packet.build()
-    key = generate_key(len(build_packet), INDEX)
-    return encrypt_and_sign(build_packet, key)
+    key = generate_key(len(packet.getlayer("Raw").load), INDEX)
+    return encrypt_and_sign(packet.getlayer("Raw").load, key)
 
 
 def decrypt(packet):
@@ -31,7 +33,7 @@ def plain_to_encrypted(packet):
 
     signature, encrypted_packet = encrypt(packet)
 
-    packet_ready_to_send = IP(dst=DEST_IP, proto=1) \
+    packet_ready_to_send = IP(dst=ENCRYPTED_IP, proto=1) \
         / EncryptionHeader(magic=DEFAULT_HEADER_START, signature=signature, index=INDEX) \
         / Raw(encrypted_packet)
 
@@ -43,7 +45,7 @@ def encrypted_to_plain(packet):
     try:
         packet.show()
         raw = decrypt(packet)
-        packet_ready_to_send = IP(dst=DEST_IP, proto=1) / Raw(raw)
+        packet_ready_to_send = IP(dst=PLAIN_IP, proto=1) / Raw(raw)
         send(packet_ready_to_send)
     except DecryptionError as e:
         print(type(e).__name__, e)
@@ -54,9 +56,9 @@ def encrypted_to_plain(packet):
 
 
 def separate_in_and_out(pkt):
-    if pkt.dst == PLAIN_MAC and pkt.src != ENCRYPTED_MAC:
+    if pkt.IP.dst == PLAIN_IP:
         plain_to_encrypted(pkt)
-    elif pkt.src == ENCRYPTED_MAC and \
+    elif pkt.IP.dst == ENCRYPTED_IP and \
             hasattr(pkt, 'Raw') and \
             len(pkt.load) <= ENCRYPTION_HEADER_SIZE and \
             not pkt.load.startswith(DEFAULT_HEADER_START):
