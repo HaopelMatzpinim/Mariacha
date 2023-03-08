@@ -55,9 +55,9 @@ def encrypted_to_plain(packet):
 
 
 def separate_in_and_out(pkt):
-    if pkt[Ether].src == PLAIN_MAC:
+    if packet.sniffed_on == PLAIN_MAC:
         plain_to_encrypted(pkt)
-    elif pkt[Ether].src == ENCRYPTED_MAC and pkt[EncryptionHeader].magic == DEFAULT_HEADER_START:
+    elif packet.sniffed_on == ENCRYPTED_MAC and pkt[EncryptionHeader].magic == DEFAULT_HEADER_START:
         encrypted_to_plain(pkt)
 
 
