@@ -31,41 +31,36 @@ def plain_to_encrypted(packet):
 
     signature, encrypted_packet = encrypt(packet)
 
-    packet_ready_to_send = Ether() \
-                           / IP(dst=DEST_IP) \
+    packet_ready_to_send = IP(dst=DEST_IP) \
                            / EncryptionHeader(magic=DEFAULT_HEADER_START, signature=signature, index=INDEX) \
-                           / Raw(encrypted_packet)
+                           / Raw(packet.build())
     INDEX += 1
-    sendp(packet_ready_to_send)
+    send(packet_ready_to_send)
 
 
 def encrypted_to_plain(packet):
     try:
-        raw = decrypt(packet)
-        packet_ready_to_send = Ether() \
-                               / IP(dst=DEST_IP) \
-                               / Raw(raw)
-        sendp(packet_ready_to_send)
-    except (TypeError, AttributeError) as e:
         packet.show()
-        print(type(e).__name__, e)
+        raw = decrypt(packet)
+        print(raw)
+        packet_ready_to_send = IP(dst=DEST_IP) \
+                               / Raw(raw)
+        # send(packet_ready_to_send)
     except DecryptionError as e:
         print(type(e).__name__, e)
     except OSError:
         print(f'Error: package to long. len: {packet.len}')
-    except struct.error as e:
-        print(type(e).__name__, e)
     except Exception as e:
         print(f'unknown error. type: {type(e).__name__}, Error: {e}')
 
 
 def separate_in_and_out(pkt):
-    if pkt.dst == PLAIN_MAC:
+    if pkt.dst == PLAIN_MAC and pkt.src != ENCRYPTED_MAC:
         plain_to_encrypted(pkt)
-    elif pkt.dst == ENCRYPTED_MAC and\
-            hasattr(packet, 'load') and\
-            len(packet.load) <= ENCRYPTION_HEADER_SIZE and\
-            not packet.load.startswith(DEFAULT_HEADER_START):
+    elif pkt.src == ENCRYPTED_MAC and \
+            hasattr(pkt, 'Raw') and \
+            len(pkt.load) <= ENCRYPTION_HEADER_SIZE and \
+            not pkt.load.startswith(DEFAULT_HEADER_START):
         encrypted_to_plain(pkt)
 
 
