@@ -38,7 +38,7 @@ def plain_to_encrypted(packet):
 def encrypted_to_plain(packet):
     try:
         raw = decrypt(packet)
-        packet_ready_to_send = Raw(raw)
+        packet_ready_to_send = IP(dst=DEST_IP, proto=1) / Raw(raw)
         send(packet_ready_to_send)
     except Exception as e:
         print(e)
