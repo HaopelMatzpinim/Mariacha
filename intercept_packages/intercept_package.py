@@ -12,6 +12,7 @@ INDEX = 0
 PLAIN_MAC = os.environ.get('PLAIN_MAC')
 ENCRYPTED_MAC = os.environ.get('ENCRYPTED_MAC')
 ENCRYPTED_IP = os.environ.get('ENCRYPTED_IP')
+HEADER_LEN = len(Ether()) + len(IP()) + len(EncryptionHeader())
 
 
 def encrypt(packet):
@@ -21,10 +22,11 @@ def encrypt(packet):
 
 
 def decrypt(packet):
-    encryption_header = EncryptionHeader(packet.build()[len(Ether()) + len(IP()):])
-    return decrypt_and_verify(encryption_header.getlayer(Raw).load,
-                              encryption_header.signature,
-                              generate_key(len(encryption_header.getlayer(Raw).load), encryption_header.index))
+    build_packet = packet.build()
+    
+    return decrypt_and_verify(build_packet[HEADER_LEN:],
+                              packet[EncryptionHeader].signature,
+                              generate_key(len(build_packet) - HEADER_LEN, packet[EncryptionHeader].index))
 
 
 def plain_to_encrypted(packet):
@@ -55,9 +57,9 @@ def encrypted_to_plain(packet):
 
 
 def separate_in_and_out(pkt):
-    if packet.sniffed_on == PLAIN_MAC:
+    if pkt.sniffed_on == PLAIN_MAC:
         plain_to_encrypted(pkt)
-    elif packet.sniffed_on == ENCRYPTED_MAC and pkt[EncryptionHeader].magic == DEFAULT_HEADER_START:
+    elif pkt.sniffed_on == ENCRYPTED_MAC and pkt[EncryptionHeader].magic == DEFAULT_HEADER_START:
         encrypted_to_plain(pkt)
 
 
