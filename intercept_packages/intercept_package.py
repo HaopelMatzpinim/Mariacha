@@ -9,9 +9,9 @@ from crypto.decrypt import *
 import os
 
 INDEX = 0
-# DEST_IP = DEST_IP
 PLAIN_MAC = os.environ.get('PLAIN_MAC')
 ENCRYPTED_MAC = os.environ.get('ENCRYPTED_MAC')
+ENCRYPTED_IP = os.environ.get('ENCRYPTED_IP')
 
 
 def encrypt(packet):
@@ -32,7 +32,7 @@ def plain_to_encrypted(packet):
 
     signature, encrypted_packet = encrypt(packet)
 
-    packet_ready_to_send = IP(dst=ENCRYPTED_MAC, proto=1) \
+    packet_ready_to_send = IP(dst=ENCRYPTED_IP, proto=1) \
         / EncryptionHeader(magic=DEFAULT_HEADER_START, signature=signature, index=INDEX) \
         / Raw(encrypted_packet)
 
