@@ -46,4 +46,4 @@ def encrypted_to_plain(packet):
 
 def sniff_all():
     sniff(prn=plain_to_encrypted)
-    # sniff(prn=encrypted_to_plain)
+    # sniff(iface='eth1', prn=encrypted_to_plain)
