@@ -41,29 +41,25 @@ def plain_to_encrypted(packet):
 
 def encrypted_to_plain(packet):
     try:
+        packet.show()
         raw = decrypt(packet)
         packet_ready_to_send = IP(dst=DEST_IP, proto=1) / Raw(raw)
         send(packet_ready_to_send)
-    except (TypeError, AttributeError) as e:
-        packet.show()
-        print(type(e).__name__, e)
     except DecryptionError as e:
         print(type(e).__name__, e)
     except OSError:
         print(f'Error: package to long. len: {packet.len}')
-    except struct.error as e:
-        print(type(e).__name__, e)
     except Exception as e:
         print(f'unknown error. type: {type(e).__name__}, Error: {e}')
 
 
 def separate_in_and_out(pkt):
-    if pkt.dst == PLAIN_MAC:
+    if pkt.dst == PLAIN_MAC and pkt.src != ENCRYPTED_MAC:
         plain_to_encrypted(pkt)
-    elif pkt.dst == ENCRYPTED_MAC and\
-            hasattr(packet, 'load') and\
-            len(packet.load) <= ENCRYPTION_HEADER_SIZE and\
-            not packet.load.startswith(DEFAULT_HEADER_START):
+    elif pkt.src == ENCRYPTED_MAC and \
+            hasattr(pkt, 'Raw') and \
+            len(pkt.load) <= ENCRYPTION_HEADER_SIZE and \
+            not pkt.load.startswith(DEFAULT_HEADER_START):
         encrypted_to_plain(pkt)
 
 
