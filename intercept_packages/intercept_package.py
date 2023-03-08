@@ -10,15 +10,14 @@ import os
 
 INDEX = 0
 # DEST_IP = DEST_IP
-PLAIN_IP = os.environ.get('PLAIN_IP')
-ENCRYPTED_IP = os.environ.get('ENCRYPTED_IP')
-
+PLAIN_MAC = os.environ.get('PLAIN_MAC')
+ENCRYPTED_MAC = os.environ.get('ENCRYPTED_MAC')
 
 
 def encrypt(packet):
-    build_packet = packet.build()
-    key = generate_key(len(packet.getlayer("Raw").load), INDEX)
-    return encrypt_and_sign(packet.getlayer("Raw").load, key)
+    build_packet = packet.build()[len(Ether()):]
+    key = generate_key(len(build_packet), INDEX)
+    return encrypt_and_sign(build_packet, key)
 
 
 def decrypt(packet):
@@ -33,7 +32,7 @@ def plain_to_encrypted(packet):
 
     signature, encrypted_packet = encrypt(packet)
 
-    packet_ready_to_send = IP(dst=ENCRYPTED_IP, proto=1) \
+    packet_ready_to_send = IP(dst=ENCRYPTED_MAC, proto=1) \
         / EncryptionHeader(magic=DEFAULT_HEADER_START, signature=signature, index=INDEX) \
         / Raw(encrypted_packet)
 
@@ -45,7 +44,7 @@ def encrypted_to_plain(packet):
     try:
         packet.show()
         raw = decrypt(packet)
-        packet_ready_to_send = IP(dst=PLAIN_IP, proto=1) / Raw(raw)
+        packet_ready_to_send = Raw(raw)
         send(packet_ready_to_send)
     except DecryptionError as e:
         print(type(e).__name__, e)
@@ -56,9 +55,9 @@ def encrypted_to_plain(packet):
 
 
 def separate_in_and_out(pkt):
-    if pkt[IP].src == PLAIN_IP:
+    if pkt[Ether].src == PLAIN_MAC:
         plain_to_encrypted(pkt)
-    elif pkt[IP].src == ENCRYPTED_IP and pkt[EncryptionHeader].magic == DEFAULT_HEADER_START:
+    elif pkt[Ether].src == ENCRYPTED_MAC and pkt[EncryptionHeader].magic == DEFAULT_HEADER_START:
         encrypted_to_plain(pkt)
 
 
