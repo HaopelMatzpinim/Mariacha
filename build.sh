@@ -19,9 +19,10 @@ docker network connect plain-net2 server2
 docker start server2
 
 
-docker run -d -it -e ENCRYPTED_IP=mazpin2 -e PLAIN_IP=server1 --name mazpin1 mazpin1
-docker run -d -it -e ENCRYPTED_IP=mazpin1 -e PLAIN_IP=server2 --name mazpin2 mazpin2
+docker run -d --privileged -it -e ENCRYPTED_IP=mazpin2 -e PLAIN_IP=server1 --name mazpin1 mazpin1
+docker run -d --privileged -it -e ENCRYPTED_IP=mazpin1 -e PLAIN_IP=server2 --name mazpin2 mazpin2
 docker network connect plain-net1 mazpin1
 docker network connect enc-net mazpin1
 docker network connect plain-net2 mazpin2
 docker network connect enc-net mazpin2
+

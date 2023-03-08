@@ -1,4 +1,4 @@
-from scapy.all import StrFixedLenField, Packet, LongField
+from scapy.all import *
 
 DEFAULT_HEADER_START = b'abcd'
 SIGNATURE_SIZE = 32
@@ -12,3 +12,6 @@ class EncryptionHeader(Packet):
         StrFixedLenField('signature', None, SIGNATURE_SIZE),
         LongField('index', 0),
     ]
+
+split_layers(IP, ICMP)
+bind_layers(IP, EncryptionHeader, proto=1)

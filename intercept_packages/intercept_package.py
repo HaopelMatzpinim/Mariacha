@@ -56,14 +56,11 @@ def encrypted_to_plain(packet):
 
 
 def separate_in_and_out(pkt):
-    if pkt.IP.dst == PLAIN_IP:
+    if pkt[IP].src == PLAIN_IP:
         plain_to_encrypted(pkt)
-    elif pkt.IP.dst == ENCRYPTED_IP and \
-            hasattr(pkt, 'Raw') and \
-            len(pkt.load) <= ENCRYPTION_HEADER_SIZE and \
-            not pkt.load.startswith(DEFAULT_HEADER_START):
+    elif pkt[IP].src == ENCRYPTED_IP and pkt[EncryptionHeader].magic == DEFAULT_HEADER_START:
         encrypted_to_plain(pkt)
 
 
 def sniff_all():
-    sniff(prn=separate_in_and_out)
+    sniff(prn=separate_in_and_out, iface=['eth0', 'eth1'])
