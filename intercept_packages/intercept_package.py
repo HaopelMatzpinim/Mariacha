@@ -8,9 +8,9 @@ from crypto.encrypt import *
 from crypto.decrypt import *
 
 INDEX = 0
-DEST_IP = '172.16.28.18'
-PLAIN_MAC = 'f4:39:09:10:b4:a8'
-ENCRYPTED_MAC = 'f4:39:09:10:b1:92'
+DEST_IP = '172.16.28.19'
+PLAIN_MAC = 'f4:39:09:10:b1:92'
+ENCRYPTED_MAC = 'f4:39:09:10:b4:a8'
 
 
 def encrypt(packet):
@@ -41,11 +41,13 @@ def plain_to_encrypted(packet):
 
 def encrypted_to_plain(packet):
     try:
+        print(packet.load)
         raw = decrypt(packet)
+        print(raw)
         packet_ready_to_send = Ether() \
                                / IP(dst=DEST_IP) \
                                / Raw(raw)
-        sendp(packet_ready_to_send)
+        #sendp(packet_ready_to_send)
     except (TypeError, AttributeError) as e:
         packet.show()
         print(type(e).__name__, e)
@@ -60,12 +62,9 @@ def encrypted_to_plain(packet):
 
 
 def separate_in_and_out(pkt):
-    if pkt.dst == PLAIN_MAC:
+    if pkt.dst == PLAIN_MAC and pkt.src != ENCRYPTED_MAC:
         plain_to_encrypted(pkt)
-    elif pkt.dst == ENCRYPTED_MAC and\
-            hasattr(packet, 'load') and\
-            len(packet.load) <= ENCRYPTION_HEADER_SIZE and\
-            not packet.load.startswith(DEFAULT_HEADER_START):
+    elif pkt.src == ENCRYPTED_MAC:
         encrypted_to_plain(pkt)
 
 
